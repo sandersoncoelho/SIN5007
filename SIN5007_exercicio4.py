@@ -4,6 +4,9 @@ import plotly.express as px
 from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 import LoaderFeatures as loader
 from NormalizationUtils import minMaxNormalization
@@ -132,10 +135,44 @@ def runNaiveBayes(dataFrame):
 
   haploidTrain, haploidTest = train_test_split(haploidDF, test_size=0.2)
   diploidTrain, diploidTest = train_test_split(diploidDF, test_size=0.2)
-  print('train:', haploidTrain)
-  print('test:', haploidTest)
-  print('train:', diploidTrain)
-  print('test:', diploidTest)
+  print('haploidTrain:', len(haploidTrain))
+  print('haploidTest:', len(haploidTest))
+  print('diploidTrain:', len(diploidTrain))
+  print('diploidTest:', len(diploidTest))
+  train = pd.concat([haploidTrain, diploidTrain])
+  test = pd.concat([haploidTest, diploidTest])
+
+  print('Train:', len(train))
+  print('Test:', len(test))
+  print(train)
+  print(test)
+
+  x_train = train[feature_names]
+  y_train = train['category']
+
+  x_test = test[feature_names]
+  y_test = test['category']
+
+  model = GaussianNB()
+  model.fit(x_train, y_train)
+
+  acc_train = model.score(x_train, y_train)
+  print("\nAccuracy on train data = %0.4f " % acc_train)
+  acc_test = model.score(x_test, y_test)
+  print("Accuracy on test data =  %0.4f " % acc_test)
+
+  y_predicteds = model.predict(x_test)
+
+  print('x_test:',x_test)
+  print('y_test:',y_test)
+  print('y_predicteds:',y_predicteds)
+
+  cm = confusion_matrix(y_test, y_predicteds)
+  ax= plt.subplot()
+  sns.heatmap(cm, annot=True, ax=ax)
+  ax.xaxis.set_ticklabels(['haploid', 'diploid'])
+  ax.yaxis.set_ticklabels(['diploid', 'haploid'])
+  plt.show()
 
 def main():
   dataFrame = getFeaturesAsDataFrame()
