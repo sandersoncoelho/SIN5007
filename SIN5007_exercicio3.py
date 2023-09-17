@@ -1,102 +1,75 @@
 import math
+from itertools import combinations
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 import CentroidUtils as centroidUtils
-import LoaderFeatures as loader
+from LoaderFeatures import FEATURE_NAMES, getFeaturesAsDataFrame
 
-haploidFeatureD12, haploidFeatureD13, haploidFeatureD34, haploidFeatureD36, haploidFeatureD45, \
-  haploidFeatureD67, haploidFeatureD68, haploidFeatureD79, haploidFeatureD810, haploidFeatureD910, \
-    haploidCentroidSize = loader.getFeatures('haploid.json')
-
-amountOfHaploides = len(haploidFeatureD12)
-
-diploidFeatureD12, diploidFeatureD13, diploidFeatureD34, diploidFeatureD36, diploidFeatureD45, \
-  diploidFeatureD67, diploidFeatureD68, diploidFeatureD79, diploidFeatureD810, diploidFeatureD910, \
-    diploidCentroidSize = loader.getFeatures('diploid.json')
-
-amountOfDiploides = len(diploidFeatureD12)
-
-FEATURE_MAPPER = {
-  'd11': (haploidFeatureD12, diploidFeatureD12),
-  'd13': (haploidFeatureD13, diploidFeatureD13),
-  'd34': (haploidFeatureD34, diploidFeatureD34),
-  'd36': (haploidFeatureD36, diploidFeatureD36),
-  'd45': (haploidFeatureD45, diploidFeatureD45),
-  'd67': (haploidFeatureD67, diploidFeatureD67),
-  'd68': (haploidFeatureD68, diploidFeatureD68),
-  'd79': (haploidFeatureD79, diploidFeatureD79),
-  'd810': (haploidFeatureD810, diploidFeatureD810),
-  'd910': (haploidFeatureD910, diploidFeatureD910),
-  'CS': (haploidCentroidSize, diploidCentroidSize)
-}
-
-selectedFeatures = []
-requiredAmountFeatures = 2
-maxDistance = 0
+DATA_FRAME = getFeaturesAsDataFrame()
+QTY_REQUIRED_FEATURES = 2
+selectedFeatures = ()
+maxDistance = np.zeros(len(FEATURE_NAMES) - 1)
 
 def getSubset(features):
-  if len(features) == requiredAmountFeatures: return []
+  lenght = len(features)
 
-  subsets = []
+  if lenght == QTY_REQUIRED_FEATURES: return ()
 
-  for i in range(len(features)):
-    subset = features.copy()
-    subset.pop(i)
-    subsets.append(subset)
-  return subsets
+  return combinations(features, lenght - 1)
+
+def getCentroidsDistance(features):
+  _features = list(features)
+  data = DATA_FRAME[_features + ['category']]
+  
+  haploidDF = data.loc[DATA_FRAME['category'] == 'haploid']
+  diploidDF = data.loc[DATA_FRAME['category'] == 'diploid']
+
+  haploidDF = haploidDF[_features]
+  diploidDF = diploidDF[_features]
+
+  haploidCentroid = centroidUtils.calculateCentroid(haploidDF[:].values)
+  diploidCentroid = centroidUtils.calculateCentroid(diploidDF[:].values)
+
+  return math.dist(haploidCentroid, diploidCentroid)
 
 def isPromisingSolution(features):
-  print('Características: ', features)
-  haploidInstance = []
+  newDistance = getCentroidsDistance(features)
 
-  for i in range(amountOfHaploides):
-    haploidInstance.append([])
-  
-  for feature in features:
-    haploidFeature = FEATURE_MAPPER[feature][0]
-    for i in range(amountOfHaploides):
-      haploidInstance[i].append(haploidFeature[i])
-
-  haploidCentroid = centroidUtils.calculateCentroid(haploidInstance)
-
-
-  diploidInstance = []
-
-  for i in range(amountOfDiploides):
-    diploidInstance.append([])
-  
-  for feature in features:
-    diploidFeature = FEATURE_MAPPER[feature][1]
-    for i in range(amountOfDiploides):
-      diploidInstance[i].append(diploidFeature[i])
-
-  diploidCentroid = centroidUtils.calculateCentroid(diploidInstance)
-
-  
-  newDistance = math.dist(haploidCentroid, diploidCentroid)
   global maxDistance
   
-  if (newDistance > maxDistance):
-    maxDistance = newDistance
-    print('Distancia entre os centroides: ', maxDistance)
+  if (newDistance > maxDistance[len(features) - 2]):
+    maxDistance[len(features) - 2] = newDistance
     return True
 
   return False
 
 def branchAndBound(features):
   if not isPromisingSolution(features): return
-
-  global selectedFeatures
-  selectedFeatures = features
   
-  if len(features) == requiredAmountFeatures:
+  if len(features) == QTY_REQUIRED_FEATURES:
+    global selectedFeatures
+    selectedFeatures = features
     return
 
   for subsetFeatures in getSubset(features):
     branchAndBound(subsetFeatures)
 
+def validateBranchAndBound(features):
+  maxDistance = 0
+  bestCombination = ()
 
-branchAndBound(list(FEATURE_MAPPER.keys()))
-print('Características selecionadas:', selectedFeatures)
+  for combination in list(combinations(features, 2)):
+    newDistance = getCentroidsDistance(combination)
+    if newDistance > maxDistance:
+      maxDistance = newDistance
+      bestCombination = combination
+
+  print('validate branch and bound:', bestCombination)
+
+def main():
+  branchAndBound(tuple(FEATURE_NAMES))
+  print('Características selecionadas:', selectedFeatures)
+  print('maxDistance:', maxDistance)
+
+main()

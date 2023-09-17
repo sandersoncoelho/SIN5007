@@ -1,84 +1,15 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import seaborn as sns
 from sklearn.decomposition import PCA
+from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
-from sklearn.metrics import confusion_matrix
-import seaborn as sns
-import matplotlib.pyplot as plt
 
-import LoaderFeatures as loader
-from NormalizationUtils import minMaxNormalization
+from LoaderFeatures import FEATURE_NAMES, getFeaturesAsDataFrame
 
-feature_names = ['d12', 'd13', 'd34', 'd36', 'd45', 'd67', 'd68', 'd79', 'd810', 'd910', 'CS']
-
-def getFeaturesAsDataFrame():
-  haploidFeatureD12, haploidFeatureD13, haploidFeatureD34, haploidFeatureD36, haploidFeatureD45, \
-    haploidFeatureD67, haploidFeatureD68, haploidFeatureD79, haploidFeatureD810, haploidFeatureD910, \
-      haploidCentroidSize = loader.getFeatures('haploid.json')
-
-  diploidFeatureD12, diploidFeatureD13, diploidFeatureD34, diploidFeatureD36, diploidFeatureD45, \
-    diploidFeatureD67, diploidFeatureD68, diploidFeatureD79, diploidFeatureD810, diploidFeatureD910, \
-      diploidCentroidSize = loader.getFeatures('diploid.json')
-
-  normHaploidFeatureD12 = minMaxNormalization(haploidFeatureD12)
-  normHaploidFeatureD13 = minMaxNormalization(haploidFeatureD13)
-  normHaploidFeatureD34 = minMaxNormalization(haploidFeatureD34)
-  normHaploidFeatureD45 = minMaxNormalization(haploidFeatureD45)
-  normHaploidFeatureD36 = minMaxNormalization(haploidFeatureD36)
-  normHaploidFeatureD67 = minMaxNormalization(haploidFeatureD67)
-  normHaploidFeatureD68 = minMaxNormalization(haploidFeatureD68)
-  normHaploidFeatureD79 = minMaxNormalization(haploidFeatureD79)
-  normHaploidFeatureD810 = minMaxNormalization(haploidFeatureD810)
-  normHaploidFeatureD910 = minMaxNormalization(haploidFeatureD910)
-  normHaploidCentroidSize = minMaxNormalization(haploidCentroidSize)
-
-  normDiploidFeatureD12 = minMaxNormalization(diploidFeatureD12)
-  normDiploidFeatureD13 = minMaxNormalization(diploidFeatureD13)
-  normDiploidFeatureD34 = minMaxNormalization(diploidFeatureD34)
-  normDiploidFeatureD36 = minMaxNormalization(diploidFeatureD36)
-  normDiploidFeatureD45 = minMaxNormalization(diploidFeatureD45)
-  normDiploidFeatureD67 = minMaxNormalization(diploidFeatureD67)
-  normDiploidFeatureD68 = minMaxNormalization(diploidFeatureD68)
-  normDiploidFeatureD79 = minMaxNormalization(diploidFeatureD79)
-  normDiploidFeatureD810 = minMaxNormalization(diploidFeatureD810)
-  normDiploidFeatureD910 = minMaxNormalization(diploidFeatureD910)
-  normDiploidCentroidSize = minMaxNormalization(diploidCentroidSize)
-
-  featureD12 = np.concatenate((normHaploidFeatureD12, normDiploidFeatureD12))
-  featureD13 = np.concatenate((normHaploidFeatureD13, normDiploidFeatureD13))
-  featureD34 = np.concatenate((normHaploidFeatureD34, normDiploidFeatureD34))
-  featureD36 = np.concatenate((normHaploidFeatureD36, normDiploidFeatureD36))
-  featureD45 = np.concatenate((normHaploidFeatureD45, normDiploidFeatureD45))
-  featureD67 = np.concatenate((normHaploidFeatureD67, normDiploidFeatureD67))
-  featureD68 = np.concatenate((normHaploidFeatureD68, normDiploidFeatureD68))
-  featureD79 = np.concatenate((normHaploidFeatureD79, normDiploidFeatureD79))
-  featureD810 = np.concatenate((normHaploidFeatureD810, normDiploidFeatureD810))
-  featureD910 = np.concatenate((normHaploidFeatureD910, normDiploidFeatureD910))
-  centroidSizeFeature = np.concatenate((normHaploidCentroidSize, normDiploidCentroidSize))
-
-  data = {
-    'd12': featureD12,
-    'd13': featureD13,
-    'd34': featureD34,
-    'd36': featureD36,
-    'd45': featureD45,
-    'd67': featureD67,
-    'd68': featureD68,
-    'd79': featureD79,
-    'd810': featureD810,
-    'd910': featureD910,
-    'CS': centroidSizeFeature
-  }
-
-  categories = np.concatenate((['haploid'] * len(normHaploidCentroidSize),
-                            ['diploid'] * len(normDiploidCentroidSize)))
-
-  dataFrame = pd.DataFrame(data)
-  dataFrame.insert(11, 'category', categories)
-  print(dataFrame)
-  return dataFrame
 
 def plotPcaScatterMatrix(pca, components, dataFrame, dimension):
   labels = {
@@ -108,7 +39,7 @@ def plotPca3D(pca, components, dataFrame):
 def printAllPca(pca):
   pcas= pca.components_.shape[0]
   most_important = [np.abs(pca.components_[i]).argmax() for i in range(pcas)]
-  most_important_names = [feature_names[most_important[i]] for i in range(pcas)]
+  most_important_names = [FEATURE_NAMES[most_important[i]] for i in range(pcas)]
   dic = {'PC{}'.format(i+1): most_important_names[i] for i in range(pcas)}
   df = pd.DataFrame(dic.items())
   print(df)
@@ -117,9 +48,16 @@ def printAllPca(pca):
   for i in pca.explained_variance_ratio_:
     print("{:.8f}".format(float(i)))
 
+  pcaQuantity = len(pca.explained_variance_ratio_)
+  plt.bar(range(1, pcaQuantity + 1), pca.explained_variance_ratio_)
+  plt.xticks(np.arange(1, pcaQuantity + 1, step=1))
+  plt.xlabel("Componentes Principais")
+  plt.ylabel("Variância Explicada")
+  plt.show()
+
 def runPCA(dataFrame):
   pca = PCA()
-  components = pca.fit_transform(dataFrame[feature_names])
+  components = pca.fit_transform(dataFrame[FEATURE_NAMES])
   
   plotPcaScatterMatrix(pca, components, dataFrame, 4)
   
@@ -129,28 +67,30 @@ def runPCA(dataFrame):
 
   printAllPca(pca)
 
-def runNaiveBayes(dataFrame):
+def splitTrainTest(dataFrame):
   haploidDF = dataFrame.loc[dataFrame['category'] == 'haploid']
   diploidDF = dataFrame.loc[dataFrame['category'] == 'diploid']
 
   haploidTrain, haploidTest = train_test_split(haploidDF, test_size=0.2)
   diploidTrain, diploidTest = train_test_split(diploidDF, test_size=0.2)
+  train = pd.concat([haploidTrain, diploidTrain])
+  test = pd.concat([haploidTest, diploidTest])
+
   print('haploidTrain:', len(haploidTrain))
   print('haploidTest:', len(haploidTest))
   print('diploidTrain:', len(diploidTrain))
   print('diploidTest:', len(diploidTest))
-  train = pd.concat([haploidTrain, diploidTrain])
-  test = pd.concat([haploidTest, diploidTest])
-
   print('Train:', len(train))
   print('Test:', len(test))
-  print(train)
-  print(test)
+  return train, test
 
-  x_train = train[feature_names]
+def runNaiveBayes(dataFrame, features):
+  train, test = splitTrainTest(dataFrame)  
+
+  x_train = train[features]
   y_train = train['category']
 
-  x_test = test[feature_names]
+  x_test = test[features]
   y_test = test['category']
 
   model = GaussianNB()
@@ -163,22 +103,20 @@ def runNaiveBayes(dataFrame):
 
   y_predicteds = model.predict(x_test)
 
-  print('x_test:',x_test)
-  print('y_test:',y_test)
-  print('y_predicteds:',y_predicteds)
-
   cm = confusion_matrix(y_test, y_predicteds)
   ax= plt.subplot()
   sns.heatmap(cm, annot=True, ax=ax)
-  ax.xaxis.set_ticklabels(['haploid', 'diploid'])
+  ax.xaxis.set_ticklabels(['diploid', 'haploid'])
   ax.yaxis.set_ticklabels(['diploid', 'haploid'])
   plt.show()
 
 def main():
   dataFrame = getFeaturesAsDataFrame()
  
-  # runPCA(dataFrame)
+  runPCA(dataFrame)
 
-  runNaiveBayes(dataFrame)
+  # runNaiveBayes(dataFrame, feature_names)
+  
+  # runNaiveBayes(dataFrame, ['CS', 'd68', 'd45'])
 
 main()
