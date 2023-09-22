@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from Classifiers import applyStratifiedKFold, runNaiveBayes
+from Classifiers import applyStratifiedKFold, runGridSearchCV, runNaiveBayes
 from LoaderFeatures import FEATURE_NAMES, getFeaturesAsDataFrame
 
 dataFrame = getFeaturesAsDataFrame()
@@ -42,16 +42,41 @@ def runNaiveBayesForFeatures(k, features):
 
   return f1ScoreMean, accuracyScoreMean, recallScoreMean, precisionScoreMean
 
-def plotScore(resultDF, score, title):
+def runNaiveBayesWithGridSearchCV(k, features, result):
+  X = dataFrame[features]
+  y = dataFrame["category"]
+
+  f1ScoreMean, f1Std,\
+    accuracyScoreMean, accStd,\
+      recallScoreMean, recStd,\
+        precisionScoreMean, preStd = runGridSearchCV(k, X, y)
+  
+  result["F1"].append(f1ScoreMean)
+  result["F1_STD"].append(f1Std)
+
+  result["ACC"].append(accuracyScoreMean)
+  result["ACC_STD"].append(accStd)
+
+  result["REC"].append(recallScoreMean)
+  result["REC_STD"].append(recStd)
+
+  result["PREC"].append(precisionScoreMean)
+  result["PREC_STD"].append(preStd)
+
+  return result
+
+def plotScore(resultDF, score, std, title):
   x = resultDF[score].index
   y = resultDF[score].values
-  error = [0.8, 0.4, 0.2]
+  error = resultDF[std].values
 
   formatPrecision = lambda x : "%.4f" % x
-  plt.bar(x, y, yerr = error, capsize = 3, ecolor = '#afafaf')
+  plt.bar(x, y, yerr = error, capsize = 3, ecolor = 'black')
   for i, v in enumerate(y):
-    plt.text(i - 0.2, v + 0.03, formatPrecision(v),
-            color = 'gray')
+    plt.text(i - 0.2, v - 0.3, formatPrecision(v),
+            color = 'black')
+    plt.text(i + 0.03, v, formatPrecision(error[i]),
+            color = 'black')
 
   plt.title(title)
   plt.grid(axis = 'y')
@@ -62,43 +87,35 @@ def main():
 
   result = {
     "F1": [],
+    "F1_STD": [],
     "ACC": [],
+    "ACC_STD": [],
     "REC": [],
-    "PREC": []
+    "REC_STD": [],
+    "PREC": [],
+    "PREC_STD": []
   }
 
   # ALL FEATURES
-  f1ScoreMean, accuracyScoreMean, recallScoreMean, precisionScoreMean = runNaiveBayesForFeatures(K, FEATURE_NAMES)
-  
-  result["F1"].append(f1ScoreMean)
-  result["ACC"].append(accuracyScoreMean)
-  result["REC"].append(recallScoreMean)
-  result["PREC"].append(precisionScoreMean)
+  # f1ScoreMean, accuracyScoreMean, recallScoreMean, precisionScoreMean = runNaiveBayesForFeatures(K, FEATURE_NAMES)
+  result = runNaiveBayesWithGridSearchCV(K, FEATURE_NAMES, result)
 
   # PCA FEATURES
   pcaFeatures = ["CS", "d68", "d45"]
-  f1ScoreMean, accuracyScoreMean, recallScoreMean, precisionScoreMean = runNaiveBayesForFeatures(K, pcaFeatures)
-
-  result["F1"].append(f1ScoreMean)
-  result["ACC"].append(accuracyScoreMean)
-  result["REC"].append(recallScoreMean)
-  result["PREC"].append(precisionScoreMean)
+  # f1ScoreMean, accuracyScoreMean, recallScoreMean, precisionScoreMean = runNaiveBayesForFeatures(K, pcaFeatures)
+  result = runNaiveBayesWithGridSearchCV(K, pcaFeatures, result)
 
   # SELECTOR 1
   sel1Features = ["d36", "d68"]
-  f1ScoreMean, accuracyScoreMean, recallScoreMean, precisionScoreMean = runNaiveBayesForFeatures(K, sel1Features)
-
-  result["F1"].append(f1ScoreMean)
-  result["ACC"].append(accuracyScoreMean)
-  result["REC"].append(recallScoreMean)
-  result["PREC"].append(precisionScoreMean)
+  # f1ScoreMean, accuracyScoreMean, recallScoreMean, precisionScoreMean = runNaiveBayesForFeatures(K, sel1Features)
+  result = runNaiveBayesWithGridSearchCV(K, sel1Features, result)
 
   resultDF = pd.DataFrame(result, index = [description["ALL"], description["PCA"], description["SEL1"]])
   print(resultDF)
 
-  plotScore(resultDF, 'F1', 'F1 Score Média')
-  plotScore(resultDF, 'ACC', 'Accuracy Score Média')
-  plotScore(resultDF, 'REC', 'Recall Score Média')
-  plotScore(resultDF, 'PREC', 'Precision Score Média')
+  plotScore(resultDF, 'F1', 'F1_STD', 'F1 Score Média')
+  plotScore(resultDF, 'ACC', 'ACC_STD', 'Accuracy Score Média')
+  plotScore(resultDF, 'REC', 'REC_STD', 'Recall Score Média')
+  plotScore(resultDF, 'PREC', 'PREC_STD', 'Precision Score Média')
   
 main()

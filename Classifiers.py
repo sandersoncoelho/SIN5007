@@ -3,22 +3,10 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from sklearn.metrics import (accuracy_score, confusion_matrix, f1_score,
-                             precision_score, recall_score)
+                             make_scorer, precision_score, recall_score)
 from sklearn.model_selection import (GridSearchCV, StratifiedKFold,
                                      train_test_split)
 from sklearn.naive_bayes import GaussianNB
-
-# nb_classifier = GaussianNB()
-
-# params_NB = {'var_smoothing': np.logspace(0,-9, num=100)}
-# gs_NB = GridSearchCV(estimator=nb_classifier, 
-#                  param_grid=params_NB, 
-#                  cv=10,
-#                  verbose=1, 
-#                  scoring='accuracy') 
-# gs_NB.fit(x_train, y_train)
-
-# gs_NB.best_params_
 
 
 def applyHoldout(dataFrame):
@@ -52,11 +40,6 @@ def runNaiveBayes(train, test, features, plotCM = False):
   model = GaussianNB()
   model.fit(X_train, y_train)
 
-  # acc_train = model.score(x_train, y_train)
-  # print("\nAccuracy on train data = %0.4f " % acc_train)
-  # acc_test = model.score(x_test, y_test)
-  # print("Accuracy on test data =  %0.4f " % acc_test)
-
   y_predicteds = model.predict(X_test)
 
   f1Score = f1_score(y_test, y_predicteds, pos_label='diploid')
@@ -73,3 +56,54 @@ def runNaiveBayes(train, test, features, plotCM = False):
     plt.show()
 
   return (f1Score, accuracyScore, recallScore, precisionScore)
+
+def runGridSearchCV(k, X, y):
+  parameters = {'var_smoothing': np.logspace(0, -9, num = 100)}
+
+  scores = {
+    'accuracy': make_scorer(accuracy_score),
+    'recall': make_scorer(recall_score, pos_label = 'diploid'),
+    'precision': make_scorer(precision_score, pos_label = 'diploid'),
+    'f1': make_scorer(f1_score, pos_label = 'diploid')
+  }
+
+  grid = GridSearchCV(estimator = GaussianNB(),
+                      param_grid = parameters,
+                      scoring = scores,
+                      refit = 'f1',
+                      cv = k)
+
+  grid.fit(X, y)
+
+  df = pd.DataFrame(grid.cv_results_)
+  
+  f1Std = np.std(df['mean_test_f1'].values)
+  accStd = np.std(df['mean_test_accuracy'])
+  recStd = np.std(df['mean_test_recall'])
+  precStd = np.std(df['mean_test_precision'])
+
+  df = df[df['rank_test_f1'] == 1]
+
+  print(df[['mean_test_f1', 'std_test_f1',
+            'mean_test_accuracy', 'std_test_accuracy',
+            'mean_test_recall', 'std_test_recall',
+            'mean_test_precision', 'std_test_precision',
+            'params']])
+  print('best_params:\n', grid.best_params_)
+
+  f1ScoreMean = grid.best_score_
+  accuracyScoreMean = df.iloc[0]['mean_test_accuracy']
+  recallScoreMean = df.iloc[0]['mean_test_recall']
+  precisionScoreMean = df.iloc[0]['mean_test_precision']
+  
+  print("f1:", f1ScoreMean, ' ', f1Std)
+  print("accuracyScoreMean:", accuracyScoreMean, ' ', accStd)
+  print("recallScoreMean:", recallScoreMean, ' ', recStd)
+  print("precisionScoreMean:", precisionScoreMean, ' ', precStd)
+
+  # print(grid.cv_results_)
+
+  return (f1ScoreMean, f1Std,
+          accuracyScoreMean, accStd,
+          recallScoreMean, recStd,
+          precisionScoreMean, precStd)
