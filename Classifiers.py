@@ -57,20 +57,20 @@ def runNaiveBayes(train, test, features, plotCM = False):
 
   return (f1Score, accuracyScore, recallScore, precisionScore)
 
-def runGridSearchCV(k, X, y):
+def runGridSearchCV(X, y, positiveClass, k, measure):
   parameters = {'var_smoothing': np.logspace(0, -9, num = 100)}
 
   scores = {
     'accuracy': make_scorer(accuracy_score),
-    'recall': make_scorer(recall_score, pos_label = 'diploid'),
-    'precision': make_scorer(precision_score, pos_label = 'diploid'),
-    'f1': make_scorer(f1_score, pos_label = 'diploid')
+    'recall': make_scorer(recall_score, pos_label = positiveClass),
+    'precision': make_scorer(precision_score, pos_label = positiveClass),
+    'f1': make_scorer(f1_score, pos_label = positiveClass)
   }
 
   grid = GridSearchCV(estimator = GaussianNB(),
                       param_grid = parameters,
                       scoring = scores,
-                      refit = 'f1',
+                      refit = measure,
                       cv = k)
 
   grid.fit(X, y)
@@ -82,24 +82,27 @@ def runGridSearchCV(k, X, y):
   recStd = np.std(df['mean_test_recall'])
   precStd = np.std(df['mean_test_precision'])
 
-  df = df[df['rank_test_f1'] == 1]
+  df = df[df['rank_test_%s' % measure] == 1]
 
   print(df[['mean_test_f1', 'std_test_f1',
             'mean_test_accuracy', 'std_test_accuracy',
             'mean_test_recall', 'std_test_recall',
             'mean_test_precision', 'std_test_precision',
             'params']])
-  print('best_params:\n', grid.best_params_)
 
-  f1ScoreMean = grid.best_score_
+  f1ScoreMean = df.iloc[0]['mean_test_f1']
   accuracyScoreMean = df.iloc[0]['mean_test_accuracy']
   recallScoreMean = df.iloc[0]['mean_test_recall']
   precisionScoreMean = df.iloc[0]['mean_test_precision']
+  params = df.iloc[0]['params']
   
   print("f1:", f1ScoreMean, ' ', f1Std)
   print("accuracyScoreMean:", accuracyScoreMean, ' ', accStd)
   print("recallScoreMean:", recallScoreMean, ' ', recStd)
   print("precisionScoreMean:", precisionScoreMean, ' ', precStd)
+
+  print('best score:', grid.best_score_)
+  print('best params: ', params)
 
   # print(grid.cv_results_)
 

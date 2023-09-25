@@ -2,6 +2,8 @@ import math
 from itertools import combinations
 
 import numpy as np
+from sklearn.feature_selection import SequentialFeatureSelector
+from sklearn.neighbors import KNeighborsClassifier
 
 import CentroidUtils as centroidUtils
 from LoaderFeatures import FEATURE_NAMES, getFeaturesAsDataFrame
@@ -67,8 +69,19 @@ def validateBranchAndBound(features):
 
   print('validate branch and bound:', bestCombination)
 
+def sequentialBackwardSelection():
+  X = DATA_FRAME[FEATURE_NAMES]
+  y = DATA_FRAME["category"]
+
+  knn = KNeighborsClassifier(n_neighbors = QTY_REQUIRED_FEATURES)
+  sfs = SequentialFeatureSelector(knn, direction='backward', n_features_to_select = QTY_REQUIRED_FEATURES)
+  sfs.fit(X, y)
+  print(sfs.get_support())
+  print(sfs.get_feature_names_out())
+
 def main():
-  branchAndBound(tuple(FEATURE_NAMES))
+  #branchAndBound(tuple(FEATURE_NAMES))
+  sequentialBackwardSelection()
   print('Características selecionadas:', selectedFeatures)
   print('maxDistance:', maxDistance)
 

@@ -5,21 +5,22 @@ import pandas as pd
 from Classifiers import applyStratifiedKFold, runGridSearchCV, runNaiveBayes
 from LoaderFeatures import FEATURE_NAMES, getFeaturesAsDataFrame
 
-dataFrame = getFeaturesAsDataFrame()
+DATA_FRAME = getFeaturesAsDataFrame()
 
 description = {
-  'ALL': 'Todas as características (11)',
+  'ALL': 'Todas as\ncaracterísticas (11)',
   'PCA': 'PCA (3)',
-  'SEL1': 'Branch and Bound (2)'
+  'SEL1': 'Branch and Bound (2)',
+  'SEL2': 'SBS (2)'
 }
 
 def runNaiveBayesForFeatures(k, features):
   f1ScoreMean = 0; accuracyScoreMean = 0; recallScoreMean = 0; precisionScoreMean = 0
   
-  for i, (train_index, test_index) in applyStratifiedKFold(dataFrame, dataFrame["category"], k):
+  for i, (train_index, test_index) in applyStratifiedKFold(DATA_FRAME, DATA_FRAME["category"], k):
     print('\n', i)
-    train = dataFrame.loc[train_index]
-    test = dataFrame.loc[test_index]
+    train = DATA_FRAME.loc[train_index]
+    test = DATA_FRAME.loc[test_index]
     print('train:', train)
     print('test:', test)
 
@@ -43,13 +44,13 @@ def runNaiveBayesForFeatures(k, features):
   return f1ScoreMean, accuracyScoreMean, recallScoreMean, precisionScoreMean
 
 def runNaiveBayesWithGridSearchCV(k, features, result):
-  X = dataFrame[features]
-  y = dataFrame["category"]
+  X = DATA_FRAME[features]
+  y = DATA_FRAME["category"]
 
   f1ScoreMean, f1Std,\
     accuracyScoreMean, accStd,\
       recallScoreMean, recStd,\
-        precisionScoreMean, preStd = runGridSearchCV(k, X, y)
+        precisionScoreMean, preStd = runGridSearchCV(X, y, 'diploid', k, 'recall')
   
   result["F1"].append(f1ScoreMean)
   result["F1_STD"].append(f1Std)
@@ -97,25 +98,36 @@ def main():
   }
 
   # ALL FEATURES
+  print("\n\nALL FEATURES")
   # f1ScoreMean, accuracyScoreMean, recallScoreMean, precisionScoreMean = runNaiveBayesForFeatures(K, FEATURE_NAMES)
   result = runNaiveBayesWithGridSearchCV(K, FEATURE_NAMES, result)
 
   # PCA FEATURES
+  print("\n\nPCA REATURES")
   pcaFeatures = ["CS", "d68", "d45"]
   # f1ScoreMean, accuracyScoreMean, recallScoreMean, precisionScoreMean = runNaiveBayesForFeatures(K, pcaFeatures)
   result = runNaiveBayesWithGridSearchCV(K, pcaFeatures, result)
 
   # SELECTOR 1
+  print("\n\nSELECTOR 1")
   sel1Features = ["d36", "d68"]
   # f1ScoreMean, accuracyScoreMean, recallScoreMean, precisionScoreMean = runNaiveBayesForFeatures(K, sel1Features)
   result = runNaiveBayesWithGridSearchCV(K, sel1Features, result)
 
-  resultDF = pd.DataFrame(result, index = [description["ALL"], description["PCA"], description["SEL1"]])
+  #SELECTOR 2
+  print("\n\nSELECTOR 2")
+  sel2Features = ["d45", "d810"]
+  result = runNaiveBayesWithGridSearchCV(K, sel2Features, result)
+
+  resultDF = pd.DataFrame(result, index = [description["ALL"],
+                                           description["PCA"],
+                                           description["SEL1"],
+                                           description["SEL2"]])
   print(resultDF)
 
-  plotScore(resultDF, 'F1', 'F1_STD', 'F1 Score Média')
-  plotScore(resultDF, 'ACC', 'ACC_STD', 'Accuracy Score Média')
-  plotScore(resultDF, 'REC', 'REC_STD', 'Recall Score Média')
-  plotScore(resultDF, 'PREC', 'PREC_STD', 'Precision Score Média')
+  plotScore(resultDF, 'F1', 'F1_STD', 'F1 Média')
+  plotScore(resultDF, 'ACC', 'ACC_STD', 'Acurácia Média')
+  plotScore(resultDF, 'REC', 'REC_STD', 'Revocação Média')
+  plotScore(resultDF, 'PREC', 'PREC_STD', 'Precisão Média')
   
 main()
