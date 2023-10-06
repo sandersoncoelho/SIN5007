@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 
 import CentroidUtils as centroidUtils
-import LoaderFeatures as loader
 from NormalizationUtils import minMaxNormalization
 
 FEATURE_NAMES = ['d12', 'd13', 'd34', 'd36', 'd45', 'd67', 'd68', 'd79', 'd810', 'd910', 'CS']
@@ -86,14 +85,14 @@ def getFeatures(annotationFile):
     d67Feature, d68Feature, d79Feature, d810Feature, d910Feature, \
     centroidSizeFeature
 
-def getFeaturesAsDataFrame():
+def getFeaturesAsDataFrame(diploidAnnotationFile, haploidAnnotationFile):
   haploidFeatureD12, haploidFeatureD13, haploidFeatureD34, haploidFeatureD36, haploidFeatureD45, \
     haploidFeatureD67, haploidFeatureD68, haploidFeatureD79, haploidFeatureD810, haploidFeatureD910, \
-      haploidCentroidSize = loader.getFeatures('haploid.json')
+      haploidCentroidSize = getFeatures(haploidAnnotationFile)
 
   diploidFeatureD12, diploidFeatureD13, diploidFeatureD34, diploidFeatureD36, diploidFeatureD45, \
     diploidFeatureD67, diploidFeatureD68, diploidFeatureD79, diploidFeatureD810, diploidFeatureD910, \
-      diploidCentroidSize = loader.getFeatures('diploid.json')
+      diploidCentroidSize = getFeatures(diploidAnnotationFile)
 
   normHaploidFeatureD12 = minMaxNormalization(haploidFeatureD12)
   normHaploidFeatureD13 = minMaxNormalization(haploidFeatureD13)

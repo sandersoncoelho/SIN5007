@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.express as px
 from sklearn.decomposition import PCA
 
-from LoaderFeatures import FEATURE_NAMES, getFeaturesAsDataFrame
+from LoaderFeatures import FEATURE_NAMES
 
 
 def plotPcaScatterMatrix(pca, components, dataFrame, dimension):

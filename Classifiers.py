@@ -57,7 +57,7 @@ def runNaiveBayes(train, test, features, plotCM = False):
 
   return (f1Score, accuracyScore, recallScore, precisionScore)
 
-def runGridSearchCV(X, y, positiveClass, k, measure):
+def runGridSearchCV(X_train, y_train, X_test, y_test, positiveClass, k, measure):
   parameters = {'var_smoothing': np.logspace(0, -9, num = 100)}
 
   scores = {
@@ -73,11 +73,11 @@ def runGridSearchCV(X, y, positiveClass, k, measure):
                       refit = measure,
                       cv = k)
 
-  grid.fit(X, y)
+  grid.fit(X_train, y_train)
 
   df = pd.DataFrame(grid.cv_results_)
   
-  f1Std = np.std(df['mean_test_f1'].values)
+  f1Std = np.std(df['mean_test_f1'])
   accStd = np.std(df['mean_test_accuracy'])
   recStd = np.std(df['mean_test_recall'])
   precStd = np.std(df['mean_test_precision'])
@@ -96,7 +96,7 @@ def runGridSearchCV(X, y, positiveClass, k, measure):
   precisionScoreMean = df.iloc[0]['mean_test_precision']
   params = df.iloc[0]['params']
   
-  print("f1:", f1ScoreMean, ' ', f1Std)
+  print("f1ScoreMean:", f1ScoreMean, ' ', f1Std)
   print("accuracyScoreMean:", accuracyScoreMean, ' ', accStd)
   print("recallScoreMean:", recallScoreMean, ' ', recStd)
   print("precisionScoreMean:", precisionScoreMean, ' ', precStd)
@@ -104,9 +104,22 @@ def runGridSearchCV(X, y, positiveClass, k, measure):
   print('best score:', grid.best_score_)
   print('best params: ', params)
 
-  # print(grid.cv_results_)
+  print("PREDICTS:\n")
+
+  y_pred = grid.predict(X_test)
+  f1TestScoreMean = f1_score(y_test, y_pred, pos_label = positiveClass)
+  accuracyTestScoreMean = accuracy_score(y_test, y_pred)
+  recallTestScoreMean = recall_score(y_test, y_pred, pos_label = positiveClass)
+  precisionTestScoreMean = precision_score(y_test, y_pred, pos_label = positiveClass)
+
+  print(f1TestScoreMean, ": is the f1 score")
+  print(accuracyTestScoreMean, ": is the accuracy score")
+  print(recallTestScoreMean, ": is the recall score")
+  print(precisionTestScoreMean, ": is the precision score")
+  # print('Results:\n', pd.DataFrame(grid.cv_results_)[['mean_test_recall', 'std_test_recall', 'rank_test_recall']])
 
   return (f1ScoreMean, f1Std,
           accuracyScoreMean, accStd,
           recallScoreMean, recStd,
-          precisionScoreMean, precStd)
+          precisionScoreMean, precStd,
+          f1TestScoreMean, accuracyTestScoreMean, recallTestScoreMean, precisionTestScoreMean)

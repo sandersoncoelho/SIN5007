@@ -5,7 +5,8 @@ import pandas as pd
 from Classifiers import applyStratifiedKFold, runGridSearchCV, runNaiveBayes
 from LoaderFeatures import FEATURE_NAMES, getFeaturesAsDataFrame
 
-DATA_FRAME = getFeaturesAsDataFrame()
+DATA_FRAME_TRAIN = getFeaturesAsDataFrame('diploid.json', 'haploid.json')
+DATA_FRAME_TEST = getFeaturesAsDataFrame('diploid_test.json', 'haploid_test.json')
 
 description = {
   'ALL': 'Todas as\ncaracterísticas (11)',
@@ -17,10 +18,10 @@ description = {
 def runNaiveBayesForFeatures(k, features):
   f1ScoreMean = 0; accuracyScoreMean = 0; recallScoreMean = 0; precisionScoreMean = 0
   
-  for i, (train_index, test_index) in applyStratifiedKFold(DATA_FRAME, DATA_FRAME["category"], k):
+  for i, (train_index, test_index) in applyStratifiedKFold(DATA_FRAME_TRAIN, DATA_FRAME_TRAIN["category"], k):
     print('\n', i)
-    train = DATA_FRAME.loc[train_index]
-    test = DATA_FRAME.loc[test_index]
+    train = DATA_FRAME_TRAIN.loc[train_index]
+    test = DATA_FRAME_TRAIN.loc[test_index]
     print('train:', train)
     print('test:', test)
 
@@ -44,13 +45,19 @@ def runNaiveBayesForFeatures(k, features):
   return f1ScoreMean, accuracyScoreMean, recallScoreMean, precisionScoreMean
 
 def runNaiveBayesWithGridSearchCV(k, features, result):
-  X = DATA_FRAME[features]
-  y = DATA_FRAME["category"]
+  X_train = DATA_FRAME_TRAIN[features]
+  y_train = DATA_FRAME_TRAIN["category"]
+
+  X_test = DATA_FRAME_TEST[features]
+  y_test = DATA_FRAME_TEST["category"]
 
   f1ScoreMean, f1Std,\
     accuracyScoreMean, accStd,\
       recallScoreMean, recStd,\
-        precisionScoreMean, preStd = runGridSearchCV(X, y, 'diploid', k, 'recall')
+        precisionScoreMean, preStd, \
+          f1TestScoreMean, accuracyTestScoreMean, \
+            recallTestScoreMean, precisionTestScoreMean \
+              = runGridSearchCV(X_train, y_train, X_test, y_test, 'diploid', k, 'recall')
   
   result["F1"].append(f1ScoreMean)
   result["F1_STD"].append(f1Std)
@@ -63,6 +70,11 @@ def runNaiveBayesWithGridSearchCV(k, features, result):
 
   result["PREC"].append(precisionScoreMean)
   result["PREC_STD"].append(preStd)
+
+  result["F1_TEST"].append(f1TestScoreMean)
+  result["ACC_TEST"].append(accuracyTestScoreMean)
+  result["REC_TEST"].append(recallTestScoreMean)
+  result["PREC_TEST"].append(precisionTestScoreMean)
 
   return result
 
@@ -83,6 +95,20 @@ def plotScore(resultDF, score, std, title):
   plt.grid(axis = 'y')
   plt.show()
 
+def plotScoreWithouStd(resultDF, score, title):
+  x = resultDF[score].index
+  y = resultDF[score].values
+
+  formatPrecision = lambda x : "%.4f" % x
+  plt.bar(x, y, capsize = 3, ecolor = 'black')
+  for i, v in enumerate(y):
+    plt.text(i - 0.2, v - 0.2, formatPrecision(v),
+            color = 'black')
+
+  plt.title(title)
+  plt.grid(axis = 'y')
+  plt.show()
+
 def main():
   K = 10
 
@@ -94,7 +120,12 @@ def main():
     "REC": [],
     "REC_STD": [],
     "PREC": [],
-    "PREC_STD": []
+    "PREC_STD": [],
+
+    "F1_TEST": [],
+    "ACC_TEST": [],
+    "REC_TEST": [],
+    "PREC_TEST": []
   }
 
   # ALL FEATURES
@@ -129,5 +160,10 @@ def main():
   plotScore(resultDF, 'ACC', 'ACC_STD', 'Acurácia Média')
   plotScore(resultDF, 'REC', 'REC_STD', 'Revocação Média')
   plotScore(resultDF, 'PREC', 'PREC_STD', 'Precisão Média')
+
+  plotScoreWithouStd(resultDF, 'F1_TEST', 'F1 Média - Test')
+  plotScoreWithouStd(resultDF, 'ACC_TEST', 'Acurácia Média - Test')
+  plotScoreWithouStd(resultDF, 'REC_TEST', 'Revocação Média - Test')
+  plotScoreWithouStd(resultDF, 'PREC_TEST', 'Precisão Média - Test')
   
 main()

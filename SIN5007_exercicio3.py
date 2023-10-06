@@ -8,7 +8,7 @@ from sklearn.neighbors import KNeighborsClassifier
 import CentroidUtils as centroidUtils
 from LoaderFeatures import FEATURE_NAMES, getFeaturesAsDataFrame
 
-DATA_FRAME = getFeaturesAsDataFrame()
+DATA_FRAME = getFeaturesAsDataFrame('diploid.json', 'haploid.json')
 QTY_REQUIRED_FEATURES = 2
 selectedFeatures = ()
 maxDistance = np.zeros(len(FEATURE_NAMES) - 1)
