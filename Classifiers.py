@@ -62,9 +62,9 @@ def runGridSearchCV(X_train, y_train, X_test, y_test, positiveClass, k, measure)
 
   scores = {
     'accuracy': make_scorer(accuracy_score),
-    'recall': make_scorer(recall_score, pos_label = positiveClass),
-    'precision': make_scorer(precision_score, pos_label = positiveClass),
-    'f1': make_scorer(f1_score, pos_label = positiveClass)
+    'recall': make_scorer(recall_score, labels = [positiveClass], average = 'macro'),
+    'precision': make_scorer(precision_score, labels = [positiveClass], average = 'macro'),
+    'f1': make_scorer(f1_score, labels = [positiveClass], average = 'macro')
   }
 
   grid = GridSearchCV(estimator = GaussianNB(),
@@ -107,10 +107,10 @@ def runGridSearchCV(X_train, y_train, X_test, y_test, positiveClass, k, measure)
   print("PREDICTS:\n")
 
   y_pred = grid.predict(X_test)
-  f1TestScoreMean = f1_score(y_test, y_pred, pos_label = positiveClass)
+  f1TestScoreMean = f1_score(y_test, y_pred, labels = [positiveClass], average = 'macro')
   accuracyTestScoreMean = accuracy_score(y_test, y_pred)
-  recallTestScoreMean = recall_score(y_test, y_pred, pos_label = positiveClass)
-  precisionTestScoreMean = precision_score(y_test, y_pred, pos_label = positiveClass)
+  recallTestScoreMean = recall_score(y_test, y_pred, labels = [positiveClass], average = 'macro')
+  precisionTestScoreMean = precision_score(y_test, y_pred, labels = [positiveClass], average = 'macro')
 
   print(f1TestScoreMean, ": is the f1 score")
   print(accuracyTestScoreMean, ": is the accuracy score")

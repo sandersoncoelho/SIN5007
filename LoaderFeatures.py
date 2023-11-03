@@ -129,6 +129,19 @@ def getFeaturesAsDataFrame(diploidAnnotationFile, haploidAnnotationFile):
   featureD810 = np.concatenate((normHaploidFeatureD810, normDiploidFeatureD810))
   featureD910 = np.concatenate((normHaploidFeatureD910, normDiploidFeatureD910))
   centroidSizeFeature = np.concatenate((normHaploidCentroidSize, normDiploidCentroidSize))
+  
+  
+  # featureD12 = np.concatenate((haploidFeatureD12, diploidFeatureD12))
+  # featureD13 = np.concatenate((haploidFeatureD13, diploidFeatureD13))
+  # featureD34 = np.concatenate((haploidFeatureD34, diploidFeatureD34))
+  # featureD36 = np.concatenate((haploidFeatureD36, diploidFeatureD36))
+  # featureD45 = np.concatenate((haploidFeatureD45, diploidFeatureD45))
+  # featureD67 = np.concatenate((haploidFeatureD67, diploidFeatureD67))
+  # featureD68 = np.concatenate((haploidFeatureD68, diploidFeatureD68))
+  # featureD79 = np.concatenate((haploidFeatureD79, diploidFeatureD79))
+  # featureD810 = np.concatenate((haploidFeatureD810, diploidFeatureD810))
+  # featureD910 = np.concatenate((haploidFeatureD910, diploidFeatureD910))
+  # centroidSizeFeature = np.concatenate((haploidCentroidSize, diploidCentroidSize))
 
   data = {
     'd12': featureD12,
@@ -144,10 +157,11 @@ def getFeaturesAsDataFrame(diploidAnnotationFile, haploidAnnotationFile):
     'CS': centroidSizeFeature
   }
 
-  categories = np.concatenate((['haploid'] * len(normHaploidCentroidSize),
-                            ['diploid'] * len(normDiploidCentroidSize)))
+  target = np.concatenate((['haploid'] * len(haploidCentroidSize),
+                            ['diploid'] * len(diploidCentroidSize)))
 
   dataFrame = pd.DataFrame(data)
-  dataFrame.insert(11, 'category', categories)
+  dataFrame.insert(11, 'target', target)
+  # pd.set_option('display.max_rows', None)
   print(dataFrame)
   return dataFrame

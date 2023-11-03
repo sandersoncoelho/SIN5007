@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from sklearn import datasets
+from sklearn.model_selection import train_test_split
 
 from Classifiers import applyStratifiedKFold, runGridSearchCV, runNaiveBayes
 from LoaderFeatures import FEATURE_NAMES, getFeaturesAsDataFrame
@@ -18,7 +20,7 @@ description = {
 def runNaiveBayesForFeatures(k, features):
   f1ScoreMean = 0; accuracyScoreMean = 0; recallScoreMean = 0; precisionScoreMean = 0
   
-  for i, (train_index, test_index) in applyStratifiedKFold(DATA_FRAME_TRAIN, DATA_FRAME_TRAIN["category"], k):
+  for i, (train_index, test_index) in applyStratifiedKFold(DATA_FRAME_TRAIN, DATA_FRAME_TRAIN["target"], k):
     print('\n', i)
     train = DATA_FRAME_TRAIN.loc[train_index]
     test = DATA_FRAME_TRAIN.loc[test_index]
@@ -44,12 +46,14 @@ def runNaiveBayesForFeatures(k, features):
 
   return f1ScoreMean, accuracyScoreMean, recallScoreMean, precisionScoreMean
 
-def runNaiveBayesWithGridSearchCV(k, features, result):
-  X_train = DATA_FRAME_TRAIN[features]
-  y_train = DATA_FRAME_TRAIN["category"]
+def runNaiveBayesWithGridSearchCV(positiveClass, k, features, result):
+  # X_train = DATA_FRAME_TRAIN[features]
+  # y_train = DATA_FRAME_TRAIN["category"]
 
-  X_test = DATA_FRAME_TEST[features]
-  y_test = DATA_FRAME_TEST["category"]
+  # X_test = DATA_FRAME_TEST[features]
+  # y_test = DATA_FRAME_TEST["category"]
+  X, y = datasets.load_iris(return_X_y=True, as_frame=True)
+  X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
   f1ScoreMean, f1Std,\
     accuracyScoreMean, accStd,\
@@ -57,7 +61,7 @@ def runNaiveBayesWithGridSearchCV(k, features, result):
         precisionScoreMean, preStd, \
           f1TestScoreMean, accuracyTestScoreMean, \
             recallTestScoreMean, precisionTestScoreMean \
-              = runGridSearchCV(X_train, y_train, X_test, y_test, 'diploid', k, 'recall')
+              = runGridSearchCV(X_train, y_train, X_test, y_test, 0, k, 'accuracy')
   
   result["F1"].append(f1ScoreMean)
   result["F1_STD"].append(f1Std)
@@ -110,6 +114,7 @@ def plotScoreWithouStd(resultDF, score, title):
   plt.show()
 
 def main():
+  positiveClass = 'diploid'
   K = 10
 
   result = {
@@ -131,39 +136,39 @@ def main():
   # ALL FEATURES
   print("\n\nALL FEATURES")
   # f1ScoreMean, accuracyScoreMean, recallScoreMean, precisionScoreMean = runNaiveBayesForFeatures(K, FEATURE_NAMES)
-  result = runNaiveBayesWithGridSearchCV(K, FEATURE_NAMES, result)
+  result = runNaiveBayesWithGridSearchCV(positiveClass, K, FEATURE_NAMES, result)
 
   # PCA FEATURES
   print("\n\nPCA REATURES")
   pcaFeatures = ["CS", "d68", "d45"]
   # f1ScoreMean, accuracyScoreMean, recallScoreMean, precisionScoreMean = runNaiveBayesForFeatures(K, pcaFeatures)
-  result = runNaiveBayesWithGridSearchCV(K, pcaFeatures, result)
+  # result = runNaiveBayesWithGridSearchCV(positiveClass, K, pcaFeatures, result)
 
   # SELECTOR 1
   print("\n\nSELECTOR 1")
   sel1Features = ["d36", "d68"]
   # f1ScoreMean, accuracyScoreMean, recallScoreMean, precisionScoreMean = runNaiveBayesForFeatures(K, sel1Features)
-  result = runNaiveBayesWithGridSearchCV(K, sel1Features, result)
+  # result = runNaiveBayesWithGridSearchCV(positiveClass, K, sel1Features, result)
 
   #SELECTOR 2
-  print("\n\nSELECTOR 2")
-  sel2Features = ["d45", "d810"]
-  result = runNaiveBayesWithGridSearchCV(K, sel2Features, result)
+  # print("\n\nSELECTOR 2")
+  # sel2Features = ["d45", "d810"]
+  # result = runNaiveBayesWithGridSearchCV(positiveClass, K, sel2Features, result)
 
-  resultDF = pd.DataFrame(result, index = [description["ALL"],
-                                           description["PCA"],
-                                           description["SEL1"],
-                                           description["SEL2"]])
-  print(resultDF)
+  # resultDF = pd.DataFrame(result, index = [description["ALL"],
+  #                                          description["PCA"],
+  #                                          description["SEL1"],
+  #                                          description["SEL2"]])
+  # print(resultDF)
 
-  plotScore(resultDF, 'F1', 'F1_STD', 'F1 Média')
-  plotScore(resultDF, 'ACC', 'ACC_STD', 'Acurácia Média')
-  plotScore(resultDF, 'REC', 'REC_STD', 'Revocação Média')
-  plotScore(resultDF, 'PREC', 'PREC_STD', 'Precisão Média')
+  # plotScore(resultDF, 'F1', 'F1_STD', 'F1 Média')
+  # plotScore(resultDF, 'ACC', 'ACC_STD', 'Acurácia Média')
+  # plotScore(resultDF, 'REC', 'REC_STD', 'Revocação Média')
+  # plotScore(resultDF, 'PREC', 'PREC_STD', 'Precisão Média')
 
-  plotScoreWithouStd(resultDF, 'F1_TEST', 'F1 Média - Test')
-  plotScoreWithouStd(resultDF, 'ACC_TEST', 'Acurácia Média - Test')
-  plotScoreWithouStd(resultDF, 'REC_TEST', 'Revocação Média - Test')
-  plotScoreWithouStd(resultDF, 'PREC_TEST', 'Precisão Média - Test')
+  # plotScoreWithouStd(resultDF, 'F1_TEST', 'F1 Média - Test')
+  # plotScoreWithouStd(resultDF, 'ACC_TEST', 'Acurácia Média - Test')
+  # plotScoreWithouStd(resultDF, 'REC_TEST', 'Revocação Média - Test')
+  # plotScoreWithouStd(resultDF, 'PREC_TEST', 'Precisão Média - Test')
   
 main()
