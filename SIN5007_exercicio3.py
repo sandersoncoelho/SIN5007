@@ -6,9 +6,9 @@ from sklearn.feature_selection import SequentialFeatureSelector
 from sklearn.neighbors import KNeighborsClassifier
 
 import CentroidUtils as centroidUtils
-from LoaderFeatures import FEATURE_NAMES, getFeaturesAsDataFrame
+from DatasetLoader import FEATURE_NAMES, getInstancesAsDataFrame
 
-DATA_FRAME = getFeaturesAsDataFrame('diploid.json', 'haploid.json')
+DATA_FRAME = getInstancesAsDataFrame('diploid.json', 'haploid.json')
 QTY_REQUIRED_FEATURES = 2
 selectedFeatures = ()
 maxDistance = np.zeros(len(FEATURE_NAMES) - 1)

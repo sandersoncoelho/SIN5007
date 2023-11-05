@@ -15,6 +15,29 @@ from sklearn.model_selection import GridSearchCV, train_test_split
 from NormalizationUtils import minMaxNormalization
 
 
+def plotBars():
+  X = ['Group A','Group B','Group C','Group D'] 
+  Ygirls = [10,20,20,40] 
+  Zboys = [20,30,25,30] 
+
+  X_axis = np.arange(len(X))
+  print(X_axis)
+  print(X_axis - 0.2)
+  print(X_axis + 0.2) 
+
+  plt.bar(X_axis - 0.2, Ygirls, 0.4, label = 'Girls') 
+  plt.bar(X_axis + 0.2, Zboys, 0.4, label = 'Boys') 
+
+  plt.xticks(X_axis, X) 
+  plt.xlabel("Groups") 
+  plt.ylabel("Number of Students") 
+  plt.title("Number of Students in each group") 
+  plt.legend() 
+  plt.show()
+plotBars()
+
+
+
 def normalize():
   x_array = np.array([2,3,5,6,7,4,8,7,6])
   normalized_arr = preprocessing.normalize([x_array])
@@ -133,7 +156,7 @@ def error(data, confidence=0.95):
 def confidence_interval(data, confidence=0.95):
   return st.t.interval(confidence=confidence, df=len(data)-1,
                        loc=np.mean(data),
-                       scale=st.sem(data)) 
+                       scale=st.sem(data))
 
 f1_ci_0 = []
 f1_ci_1 = []
@@ -209,4 +232,4 @@ def main():
   print(error(prec_ci_2))
   print(error(prec_ci_3))
 
-main()
+# main()

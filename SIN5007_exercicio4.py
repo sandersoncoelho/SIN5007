@@ -1,10 +1,10 @@
 from Classifiers import applyHoldout, runNaiveBayes
-from LoaderFeatures import FEATURE_NAMES, getFeaturesAsDataFrame
+from DatasetLoader import FEATURE_NAMES, getInstancesAsDataFrame
 from PcaUtils import runPCA
 
 
 def main():
-  dataFrame = getFeaturesAsDataFrame()
+  dataFrame = getInstancesAsDataFrame()
  
   runPCA(dataFrame)
 

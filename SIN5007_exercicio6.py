@@ -5,10 +5,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (accuracy_score, f1_score, precision_score,
                              recall_score)
 
-from LoaderFeatures import FEATURE_NAMES, getFeaturesAsDataFrame
+from DatasetLoader import FEATURE_NAMES, getInstancesAsDataFrame
 
-DATA_FRAME_TRAIN = getFeaturesAsDataFrame('diploid.json', 'haploid.json')
-DATA_FRAME_TEST = getFeaturesAsDataFrame('diploid_test.json', 'haploid_test.json')
+DATA_FRAME_TRAIN = getInstancesAsDataFrame('diploid.json', 'haploid.json')
+DATA_FRAME_TEST = getInstancesAsDataFrame('diploid_test.json', 'haploid_test.json')
 
 description = {
   'ALL': 'Todas as\ncaracterísticas (11)',

@@ -26,10 +26,6 @@ def applyHoldout(dataFrame):
   print('Test:', len(test))
   return train, test
 
-def applyStratifiedKFold(X, y, k):
-  kf = StratifiedKFold(n_splits = k)
-  return list(enumerate(kf.split(X, y)))
-
 def runNaiveBayes(train, test, features, plotCM = False):
   X_train = train[features]
   y_train = train['category']

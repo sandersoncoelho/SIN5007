@@ -5,10 +5,10 @@ from sklearn import datasets
 from sklearn.model_selection import train_test_split
 
 from Classifiers import applyStratifiedKFold, runGridSearchCV, runNaiveBayes
-from LoaderFeatures import FEATURE_NAMES, getFeaturesAsDataFrame
+from DatasetLoader import FEATURE_NAMES, getInstancesAsDataFrame
 
-DATA_FRAME_TRAIN = getFeaturesAsDataFrame('diploid.json', 'haploid.json')
-DATA_FRAME_TEST = getFeaturesAsDataFrame('diploid_test.json', 'haploid_test.json')
+DATA_FRAME_TRAIN = getInstancesAsDataFrame('diploid.json', 'haploid.json')
+DATA_FRAME_TEST = getInstancesAsDataFrame('diploid_test.json', 'haploid_test.json')
 
 description = {
   'ALL': 'Todas as\ncaracterísticas (11)',
