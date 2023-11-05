@@ -1,18 +1,17 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
+import scipy.stats as st
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import (accuracy_score, confusion_matrix, f1_score,
-                             make_scorer, precision_score, recall_score)
-from sklearn.model_selection import (GridSearchCV, StratifiedKFold,
-                                     train_test_split)
+from sklearn.metrics import (accuracy_score, f1_score, make_scorer,
+                             precision_score, recall_score)
+from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
 
 from DatasetLoader import FEATURE_NAMES, loadDataset
 
 DATASET = loadDataset()
-# print(DATASET)
+print(DATASET)
 K = 10
 POSITIVE_CLASS = 'diploid'
 
@@ -48,6 +47,13 @@ class EstimatorResult:
     return f"\n\nacc:{self.accuracy},\nf1:{self.f1},\nprec:{self.precision},\nrec:{self.recall}\n" \
       f"acc_error:{self.accuracyError},\nf1_error:{self.f1Error},\nprec_error:{self.precisionError},\nrec_error:{self.recallError}"
 
+def error(data, confidence=0.95):
+    a = 1.0 * np.array(data)
+    n = len(a)
+    se = st.sem(a)
+    h = se * st.t.ppf((1 + confidence) / 2., n-1)
+    return h
+
 def applyStratifiedKFold(X, y, k):
   kf = StratifiedKFold(n_splits = k)
   return list(enumerate(kf.split(X, y)))
@@ -64,17 +70,18 @@ def plotScore(results, score, title):
   x = descriptions
   x_axis = np.arange(len(x))
   formatPrecision = lambda x : "%.2f" % (x * 100)
-  barPosition = [-0.2, 0.2]
+  barPosition = [-0.3, 0, 0.3]
   i = 0
+  plt.figure(figsize=(10,6))
 
   for label, estimatorResult in results:
     y, error = getEstimatorResultValues(estimatorResult, score)
-    plt.bar(x_axis + barPosition[i], y, width = 0.4, yerr = error, capsize = 3, ecolor = 'black', label = label)
-    i += 1
+    plt.bar(x_axis + barPosition[i], y, width = 0.3, yerr = error, capsize = 3, ecolor = 'black', label = label)
 
     for j, v in enumerate(y):
-      plt.text(j - 0.2, v - 0.3, formatPrecision(v), color = 'black')
-      plt.text(j + 0.03, v, formatPrecision(error[j]), color = 'black')
+      plt.text(j + barPosition[i] - 0.1, v - 0.3, formatPrecision(v), color = 'black')
+
+    i += 1
 
   plt.xticks(x_axis, x)
   plt.title(title)
@@ -88,10 +95,10 @@ def appendResult(estimatorResult, score):
   estimatorResult.precision.append(np.mean(score.precision))
   estimatorResult.recall.append(np.mean(score.recall))
 
-  estimatorResult.accuracyError.append(np.std(score.accuracy))
-  estimatorResult.f1Error.append(np.std(score.f1))
-  estimatorResult.precisionError.append(np.std(score.precision))
-  estimatorResult.recallError.append(np.std(score.recall))
+  estimatorResult.accuracyError.append(error(score.accuracy))
+  estimatorResult.f1Error.append(error(score.f1))
+  estimatorResult.precisionError.append(error(score.precision))
+  estimatorResult.recallError.append(error(score.recall))
 
 def runEstimator(estimator, parameters, features, train, test, score):
   X_train = train[features]
@@ -114,6 +121,8 @@ def runEstimator(estimator, parameters, features, train, test, score):
                       cv = K)
   
   grid.fit(X_train, y_train)
+  print('best score:', grid.best_score_)
+  print('best params: ', grid.best_params_)
   y_pred = grid.predict(X_test)
   
   accuracy = accuracy_score(y_test, y_pred)
@@ -144,7 +153,7 @@ def runSVM(features, train, test, score):
   parameters = {
     'C': [0.1, 1, 10, 100, 1000],
     'gamma': [1, 0.1, 0.01, 0.001, 0.0001],
-    'kernel': ['rbf']
+    'kernel': ['rbf','linear']
   }
   runEstimator(SVC(), parameters, features, train, test, score)
 
@@ -153,6 +162,11 @@ def main():
   naiveBayesScorePCA = Score([], [], [], [])
   naiveBayesScoreSel1 = Score([], [], [], [])
   naiveBayesScoreSel2 = Score([], [], [], [])
+
+  randomForestScoreAllFeatures = Score([], [], [], [])
+  randomForestScorePCA = Score([], [], [], [])
+  randomForestScoreSel1 = Score([], [], [], [])
+  randomForestScoreSel2 = Score([], [], [], [])
 
   svmScoreAllFeatures = Score([], [], [], [])
   svmScorePCA = Score([], [], [], [])
@@ -166,22 +180,22 @@ def main():
 
     print("Evaluate all features")
     runNaiveBayes(FEATURE_NAMES, train, test, naiveBayesScoreAllFeatures)
-    # runRandomForest(FEATURE_NAMES, train, test, naiveBayesScoreAllFeatures)
+    runRandomForest(FEATURE_NAMES, train, test, randomForestScoreAllFeatures)
     runSVM(FEATURE_NAMES, train, test, svmScoreAllFeatures)
 
     print("Evaluate PCA features")
     runNaiveBayes(["CS", "d68", "d45"], train, test, naiveBayesScorePCA)
-    # runNaiveBayes(["CS", "d68", "d45"], train, test, naiveBayesScorePCA)
+    runNaiveBayes(["CS", "d68", "d45"], train, test, randomForestScorePCA)
     runSVM(["CS", "d68", "d45"], train, test, svmScorePCA)
 
     print("Evaluate selector 1")
     runNaiveBayes(["d36", "d68"], train, test, naiveBayesScoreSel1)
-    # runRandomForest(["d36", "d68"], train, test, naiveBayesScoreSel1)
+    runRandomForest(["d36", "d68"], train, test, randomForestScoreSel1)
     runSVM(["d36", "d68"], train, test, svmScoreSel1)
 
     print("Evaluate selector 2")
     runNaiveBayes(["d45", "d810"], train, test, naiveBayesScoreSel2)
-    # runRandomForest(["d45", "d810"], train, test, naiveBayesScoreSel2)
+    runRandomForest(["d45", "d810"], train, test, randomForestScoreSel2)
     runSVM(["d45", "d810"], train, test, svmScoreSel2)
 
     
@@ -194,6 +208,13 @@ def main():
   appendResult(naiveBayesResult, naiveBayesScoreSel2)
   print("naiveBayesResult:", naiveBayesResult)
 
+  randomForestResult = EstimatorResult([], [], [], [], [], [], [], [])
+  appendResult(randomForestResult, randomForestScoreAllFeatures)
+  appendResult(randomForestResult, randomForestScorePCA)
+  appendResult(randomForestResult, randomForestScoreSel1)
+  appendResult(randomForestResult, randomForestScoreSel2)
+  print("randomForestResult:", randomForestResult)
+
   svmResult = EstimatorResult([], [], [], [], [], [], [], [])
   appendResult(svmResult, svmScoreAllFeatures)
   appendResult(svmResult, svmScorePCA)
@@ -203,34 +224,13 @@ def main():
 
   results = [
     ("NB", naiveBayesResult),
-    ("SVM", svmResult)
+    ("SVM", svmResult),
+    ("RF", randomForestResult)
   ]
 
-  plotScore(results, 'ACC', 'ACC Média')
+  plotScore(results, 'ACC', 'Acurácia Média')
   plotScore(results, 'F1', 'F1 Média')
-  plotScore(results, 'PREC', 'PREC Média')
-  plotScore(results, 'REC', 'REC Média')
+  plotScore(results, 'PREC', 'Precisão Média')
+  plotScore(results, 'REC', 'Revocação Média')
 
 main()
-
-# print(formatPrecision(0.1053))
-# print(formatPrecision(0.6130))
-# a = EstimatorResult([], [], [], [], [], [], [], [])
-# a.accuracy = [1,2,3,4]
-# a.f1 = [11,2,3,4]
-# a.precision = [12,2,3,4]
-# a.recall = [13,2,3,4]
-
-# b = EstimatorResult([], [], [], [], [], [], [], [])
-# b.accuracy = [22,3,4,5]
-# b.f1 = [23,3,4,5]
-# b.precision = [24,3,4,5]
-# b.recall = [25,3,4,5]
-
-# results = [(a, 'a'),(b, 'b')]
-# for r, i in results:
-#   print(i, getEstimatorResultValues(r, 'ACC'))
-
-
-# print(a.accuracy, a.f1, a.precision, a.recall)
-# print(b.accuracy, b.f1, b.precision, b.recall)

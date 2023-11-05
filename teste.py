@@ -34,7 +34,7 @@ def plotBars():
   plt.title("Number of Students in each group") 
   plt.legend() 
   plt.show()
-plotBars()
+# plotBars()
 
 
 
@@ -57,12 +57,6 @@ def calculateInterval(haploids, diploids):
 # calculateInterval([0.556975,0.000000,0.324770,0.113269,0.257528,0.384925,0.973770,0.864172,0.788669,0.345437,0.848710,0.326465,0.165965,0.435375,0.452994,0.515888,1.000000,0.596583,0.798661,0.088981,0.563435,0.496817,0.335340,0.577431,0.868860,0.399696,0.628894,0.415988],
 #                   [0.554895,0.672176,0.868067,0.736900,0.800848,0.420240,0.940100,0.628522,0.702037,0.737661,1.000000,0.834109,0.000000,0.122474,0.987839,0.442139,0.450673])
 
-def confidenceInterval():
-  gfg_data = np.random.randint(5, 10, 100) 
-  interval = st.norm.interval(0.90, loc=np.mean(gfg_data), scale=st.sem(gfg_data))
-  print(interval)
-
-# confidenceInterval()
 
 def randomForest():
   X, y = sklearn.datasets.load_iris(return_X_y=True, as_frame=True)
@@ -146,10 +140,11 @@ def randomForest():
 # print('best_params:\n', grid.best_params_)
 # print('best_params:\n', grid.best_score_)
 
+
 def error(data, confidence=0.95):
     a = 1.0 * np.array(data)
     n = len(a)
-    m, se = np.mean(a), st.sem(a)
+    se = st.sem(a)
     h = se * st.t.ppf((1 + confidence) / 2., n-1)
     return h
 
@@ -157,6 +152,15 @@ def confidence_interval(data, confidence=0.95):
   return st.t.interval(confidence=confidence, df=len(data)-1,
                        loc=np.mean(data),
                        scale=st.sem(data))
+
+def confidenceInterval(data, confidence=0.95):
+  return st.norm.interval(confidence, loc=np.mean(data), scale=st.sem(data))
+
+# data = [19.8, 18.5, 17.6, 16.7, 15.8, 15.4, 14.1, 13.6, 11.9, 11.4, 11.4, 8.8, 7.5, 15.4, 15.4, 19.5, 14.9, 12.7, 11.9, 11.4, 10.1, 7.9]
+data = [16.8, 17.2, 17.4, 16.9, 16.5, 17.1]
+print(error(data, 0.99))
+print(confidence_interval(data, 0.99))
+print(confidenceInterval(data, 0.99))
 
 f1_ci_0 = []
 f1_ci_1 = []

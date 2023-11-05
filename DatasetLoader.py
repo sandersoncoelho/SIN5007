@@ -7,7 +7,6 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
 import CentroidUtils as centroidUtils
-from NormalizationUtils import minMaxNormalization
 
 FEATURE_NAMES = ['d12', 'd13', 'd34', 'd36', 'd45', 'd67', 'd68', 'd79', 'd810', 'd910', 'CS']
 
@@ -127,19 +126,19 @@ def getInstancesAsDataFrame(annotationFile, target):
 
 def normalizeDataset(dataset):
   for feature in FEATURE_NAMES:
-    dataset[feature] = MinMaxScaler().fit_transform(np.array(dataset[feature]).reshape(-1,1)) 
+    dataset[feature] = MinMaxScaler().fit_transform(np.array(dataset[feature]).reshape(-1, 1)) 
   
   return dataset
 
 def loadDataset(normalized = True):
-  pd.set_option('display.max_rows', None)
+  # pd.set_option('display.max_rows', None)
   diploidDf = getInstancesAsDataFrame('diploid.json', 'diploid')
   diploidTestDf = getInstancesAsDataFrame('diploid_test.json', 'diploid')
   
   haploidDf = getInstancesAsDataFrame('haploid.json', 'haploid')
   haploidTestDf = getInstancesAsDataFrame('haploid_test.json', 'haploid')
 
-  dataset = pd.concat([diploidDf, diploidTestDf, haploidDf, haploidTestDf], axis=0, ignore_index=True)
+  dataset = pd.concat([diploidDf, diploidTestDf, haploidDf, haploidTestDf], axis = 0, ignore_index = True)
 
   if normalized:
     dataset = normalizeDataset(dataset)
