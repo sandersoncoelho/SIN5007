@@ -8,9 +8,9 @@ from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
 
-from DatasetLoader import FEATURE_NAMES, loadDataset
+from DatasetLoader import loadDataset
 
-DATASET = loadDataset()
+DATASET, FEATURE_NAMES = loadDataset()
 print(DATASET)
 K = 10
 POSITIVE_CLASS = 'diploid'
@@ -180,23 +180,23 @@ def main():
 
     print("Evaluate all features")
     runNaiveBayes(FEATURE_NAMES, train, test, naiveBayesScoreAllFeatures)
-    runRandomForest(FEATURE_NAMES, train, test, randomForestScoreAllFeatures)
+    # runRandomForest(FEATURE_NAMES, train, test, randomForestScoreAllFeatures)
     runSVM(FEATURE_NAMES, train, test, svmScoreAllFeatures)
 
-    print("Evaluate PCA features")
-    runNaiveBayes(["CS", "d68", "d45"], train, test, naiveBayesScorePCA)
-    runNaiveBayes(["CS", "d68", "d45"], train, test, randomForestScorePCA)
-    runSVM(["CS", "d68", "d45"], train, test, svmScorePCA)
+    # print("Evaluate PCA features")
+    # runNaiveBayes(["CS", "d68", "d45"], train, test, naiveBayesScorePCA)
+    # runNaiveBayes(["CS", "d68", "d45"], train, test, randomForestScorePCA)
+    # runSVM(["CS", "d68", "d45"], train, test, svmScorePCA)
 
-    print("Evaluate selector 1")
-    runNaiveBayes(["d36", "d68"], train, test, naiveBayesScoreSel1)
-    runRandomForest(["d36", "d68"], train, test, randomForestScoreSel1)
-    runSVM(["d36", "d68"], train, test, svmScoreSel1)
+    # print("Evaluate selector 1")
+    # runNaiveBayes(["d36", "d68"], train, test, naiveBayesScoreSel1)
+    # runRandomForest(["d36", "d68"], train, test, randomForestScoreSel1)
+    # runSVM(["d36", "d68"], train, test, svmScoreSel1)
 
-    print("Evaluate selector 2")
-    runNaiveBayes(["d45", "d810"], train, test, naiveBayesScoreSel2)
-    runRandomForest(["d45", "d810"], train, test, randomForestScoreSel2)
-    runSVM(["d45", "d810"], train, test, svmScoreSel2)
+    # print("Evaluate selector 2")
+    # runNaiveBayes(["d45", "d810"], train, test, naiveBayesScoreSel2)
+    # runRandomForest(["d45", "d810"], train, test, randomForestScoreSel2)
+    # runSVM(["d45", "d810"], train, test, svmScoreSel2)
 
     
   print("\nCalculating mean and confidence interval")
@@ -208,12 +208,12 @@ def main():
   appendResult(naiveBayesResult, naiveBayesScoreSel2)
   print("naiveBayesResult:", naiveBayesResult)
 
-  randomForestResult = EstimatorResult([], [], [], [], [], [], [], [])
-  appendResult(randomForestResult, randomForestScoreAllFeatures)
-  appendResult(randomForestResult, randomForestScorePCA)
-  appendResult(randomForestResult, randomForestScoreSel1)
-  appendResult(randomForestResult, randomForestScoreSel2)
-  print("randomForestResult:", randomForestResult)
+  # randomForestResult = EstimatorResult([], [], [], [], [], [], [], [])
+  # appendResult(randomForestResult, randomForestScoreAllFeatures)
+  # appendResult(randomForestResult, randomForestScorePCA)
+  # appendResult(randomForestResult, randomForestScoreSel1)
+  # appendResult(randomForestResult, randomForestScoreSel2)
+  # print("randomForestResult:", randomForestResult)
 
   svmResult = EstimatorResult([], [], [], [], [], [], [], [])
   appendResult(svmResult, svmScoreAllFeatures)
@@ -225,7 +225,7 @@ def main():
   results = [
     ("NB", naiveBayesResult),
     ("SVM", svmResult),
-    ("RF", randomForestResult)
+    ("RF", naiveBayesResult)
   ]
 
   plotScore(results, 'ACC', 'Acurácia Média')
