@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import scipy.stats as st
+from sklearn import datasets
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (accuracy_score, f1_score, make_scorer,
                              precision_score, recall_score)
@@ -10,10 +12,15 @@ from sklearn.svm import SVC
 
 from DatasetLoader import loadDataset
 
-DATASET, FEATURE_NAMES = loadDataset()
+# DATASET, FEATURE_NAMES = loadDataset()
+iris = datasets.load_iris()
+print(iris.feature_names)
+FEATURE_NAMES = iris.feature_names#[0,1,2,3]#['setosa', 'versicolor', 'virginica']
+DATASET = pd.DataFrame(iris.data, columns=iris.feature_names)
+DATASET['target'] = iris.target
 print(DATASET)
 K = 10
-POSITIVE_CLASS = 'diploid'
+POSITIVE_CLASS = 'virginica'
 
 descriptions = [
   'Todas as\ncaracterísticas (11)',
@@ -109,9 +116,9 @@ def runEstimator(estimator, parameters, features, train, test, score):
 
   scores = {
     'accuracy': make_scorer(accuracy_score),
-    'f1': make_scorer(f1_score, labels = [POSITIVE_CLASS], average = 'macro'),
+    'f1': make_scorer(f1_score, labels = [POSITIVE_CLASS], average = 'macro', zero_division = 0),
     'precision': make_scorer(precision_score, labels = [POSITIVE_CLASS], average = 'macro', zero_division = 0),
-    'recall': make_scorer(recall_score, labels = [POSITIVE_CLASS], average = 'macro')
+    'recall': make_scorer(recall_score, labels = [POSITIVE_CLASS], average = 'macro', zero_division = 0)
   }
 
   grid = GridSearchCV(estimator = estimator,
@@ -126,9 +133,9 @@ def runEstimator(estimator, parameters, features, train, test, score):
   y_pred = grid.predict(X_test)
   
   accuracy = accuracy_score(y_test, y_pred)
-  f1 = f1_score(y_test, y_pred, labels = [POSITIVE_CLASS], average = 'macro')
+  f1 = f1_score(y_test, y_pred, labels = [POSITIVE_CLASS], average = 'macro', zero_division = 0)
   precision = precision_score(y_test, y_pred, labels = [POSITIVE_CLASS], average = 'macro', zero_division = 0)
-  recall = recall_score(y_test, y_pred, labels = [POSITIVE_CLASS], average = 'macro')
+  recall = recall_score(y_test, y_pred, labels = [POSITIVE_CLASS], average = 'macro', zero_division = 0)
 
   score.accuracy.append(accuracy)
   score.f1.append(f1)
@@ -153,7 +160,7 @@ def runSVM(features, train, test, score):
   parameters = {
     'C': [0.1, 1, 10, 100, 1000],
     'gamma': [1, 0.1, 0.01, 0.001, 0.0001],
-    'kernel': ['rbf','linear']
+    'kernel': ['linear', 'poly', 'sigmoid', 'rbf']
   }
   runEstimator(SVC(), parameters, features, train, test, score)
 
@@ -184,9 +191,10 @@ def main():
     runSVM(FEATURE_NAMES, train, test, svmScoreAllFeatures)
 
     # print("Evaluate PCA features")
-    # runNaiveBayes(["CS", "d68", "d45"], train, test, naiveBayesScorePCA)
-    # runNaiveBayes(["CS", "d68", "d45"], train, test, randomForestScorePCA)
-    # runSVM(["CS", "d68", "d45"], train, test, svmScorePCA)
+    # featuresPCA = ["d410", "d310", "CS", "d23", "d78", "d58", "d810"]
+    # runNaiveBayes(featuresPCA, train, test, naiveBayesScorePCA)
+    # runNaiveBayes(featuresPCA, train, test, randomForestScorePCA)
+    # runSVM(featuresPCA, train, test, svmScorePCA)
 
     # print("Evaluate selector 1")
     # runNaiveBayes(["d36", "d68"], train, test, naiveBayesScoreSel1)

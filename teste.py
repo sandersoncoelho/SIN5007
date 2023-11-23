@@ -7,12 +7,44 @@ from datasets import load_dataset
 # Print all the available datasets
 from huggingface_hub import list_datasets
 from sklearn import datasets, preprocessing
+from sklearn.decomposition import PCA
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.metrics import (accuracy_score, f1_score, make_scorer,
                              precision_score, recall_score)
 from sklearn.model_selection import GridSearchCV, train_test_split
 
 from NormalizationUtils import minMaxNormalization
+
+
+##IRIS
+def main_iris():
+  iris = datasets.load_iris()
+  print(iris)
+  # _, ax = plt.subplots()
+  # scatter = ax.scatter(iris.data[:, 0], iris.data[:, 1], c=iris.target)
+  # ax.set(xlabel=iris.feature_names[0], ylabel=iris.feature_names[1])
+  # _ = ax.legend(
+  #     scatter.legend_elements()[0], iris.target_names, loc="lower right", title="Classes"
+  # )
+  # plt.show()
+  FEATURE_NAMES = ['setosa', 'versicolor', 'virginica']
+  pca = PCA(n_components=3)
+  pca.fit_transform(iris.data)
+  pcas = pca.components_.shape[0]
+  most_important = [np.abs(pca.components_[i]).argmax() for i in range(pcas)]
+  most_important_names = [FEATURE_NAMES[most_important[i]] for i in range(pcas)]
+  dic = {'PC{}'.format(i+1): most_important_names[i] for i in range(pcas)}
+  df = pd.DataFrame(dic.items())
+  print(df)
+
+  print("PCA:")
+  for i in pca.explained_variance_ratio_:
+    print("{:.8f}".format(float(i)))
+  
+
+main_iris()
+
+
 
 
 def plotBars():
@@ -157,10 +189,10 @@ def confidenceInterval(data, confidence=0.95):
   return st.norm.interval(confidence, loc=np.mean(data), scale=st.sem(data))
 
 # data = [19.8, 18.5, 17.6, 16.7, 15.8, 15.4, 14.1, 13.6, 11.9, 11.4, 11.4, 8.8, 7.5, 15.4, 15.4, 19.5, 14.9, 12.7, 11.9, 11.4, 10.1, 7.9]
-data = [16.8, 17.2, 17.4, 16.9, 16.5, 17.1]
-print(error(data, 0.99))
-print(confidence_interval(data, 0.99))
-print(confidenceInterval(data, 0.99))
+# data = [16.8, 17.2, 17.4, 16.9, 16.5, 17.1]
+# print(error(data, 0.99))
+# print(confidence_interval(data, 0.99))
+# print(confidenceInterval(data, 0.99))
 
 f1_ci_0 = []
 f1_ci_1 = []

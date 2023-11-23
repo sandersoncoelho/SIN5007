@@ -16,12 +16,12 @@ def zscoreNormalization(list):
   return out
 
 def minMaxNormalization(list):
-  # out = []
-  # mininum = min(list)
-  # maximum = max(list)
+  out = []
+  mininum = min(list)
+  maximum = max(list)
 
-  # for i in list:
-  #   out.append((i - mininum) / (maximum - mininum))
+  for i in list:
+    out.append((i - mininum) / (maximum - mininum))
 
   # return out
   # normalized_arr = preprocessing.MinMaxScaler().fit(list)
