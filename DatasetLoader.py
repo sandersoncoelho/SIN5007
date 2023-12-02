@@ -87,7 +87,7 @@ def normalizeDataset(dataset, featureNames):
   return dataset
 
 def loadDataset(normalized = True):
-  pd.set_option('display.max_rows', None)
+  # pd.set_option('display.max_rows', None)
   diploidDf = getInstancesAsDataFrame('diploid.json', 'diploid')
   diploidTestDf = getInstancesAsDataFrame('diploid_test.json', 'diploid')
   
@@ -102,7 +102,9 @@ def loadDataset(normalized = True):
 
   return dataset, featureNames
 
-# DATA_SET, _ = loadDataset(normalized=False)
+# DATA_SET, FEATURE_NAMES = loadDataset()
+# print(DATA_SET)
+# print(len(FEATURE_NAMES))
 # print(DATA_SET[['a134', 'a213', 'a367', 'a436', 'a679', 'a768']])
 # print(DATA_SET["a213","a134","a436","a367","a768","a679"])
 

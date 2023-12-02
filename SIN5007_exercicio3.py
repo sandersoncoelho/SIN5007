@@ -6,10 +6,12 @@ from sklearn.feature_selection import SequentialFeatureSelector
 from sklearn.neighbors import KNeighborsClassifier
 
 import CentroidUtils as centroidUtils
-from DatasetLoader import FEATURE_NAMES, getInstancesAsDataFrame
+from DatasetLoader import loadDataset
 
-DATA_FRAME = getInstancesAsDataFrame('diploid.json', 'haploid.json')
+DATA_SET, FEATURE_NAMES = loadDataset()
 QTY_REQUIRED_FEATURES = 2
+FIRST_CLASS = 'diploid'
+SECOND_CLASS = 'haploid'
 selectedFeatures = ()
 maxDistance = np.zeros(len(FEATURE_NAMES) - 1)
 
@@ -22,25 +24,25 @@ def getSubset(features):
 
 def getCentroidsDistance(features):
   _features = list(features)
-  data = DATA_FRAME[_features + ['category']]
+  data = DATA_SET[_features + ['target']]
   
-  haploidDF = data.loc[DATA_FRAME['category'] == 'haploid']
-  diploidDF = data.loc[DATA_FRAME['category'] == 'diploid']
+  firstClassDF = data.loc[DATA_SET['target'] == FIRST_CLASS]
+  secondClassDF = data.loc[DATA_SET['target'] == SECOND_CLASS]
 
-  haploidDF = haploidDF[_features]
-  diploidDF = diploidDF[_features]
+  firstClassDF = firstClassDF[_features]
+  secondClassDF = secondClassDF[_features]
 
-  haploidCentroid = centroidUtils.calculateCentroid(haploidDF[:].values)
-  diploidCentroid = centroidUtils.calculateCentroid(diploidDF[:].values)
+  firstClassCentroid = centroidUtils.calculateCentroid(firstClassDF[:].values)
+  secondClassCentroid = centroidUtils.calculateCentroid(secondClassDF[:].values)
 
-  return math.dist(haploidCentroid, diploidCentroid)
+  return math.dist(firstClassCentroid, secondClassCentroid)
 
 def isPromisingSolution(features):
   newDistance = getCentroidsDistance(features)
 
   global maxDistance
   
-  if (newDistance > maxDistance[len(features) - 2]):
+  if newDistance > maxDistance[len(features) - 2]:
     maxDistance[len(features) - 2] = newDistance
     return True
 
@@ -70,8 +72,8 @@ def validateBranchAndBound(features):
   print('validate branch and bound:', bestCombination)
 
 def sequentialBackwardSelection():
-  X = DATA_FRAME[FEATURE_NAMES]
-  y = DATA_FRAME["category"]
+  X = DATA_SET[FEATURE_NAMES]
+  y = DATA_SET["target"]
 
   knn = KNeighborsClassifier(n_neighbors = QTY_REQUIRED_FEATURES)
   sfs = SequentialFeatureSelector(knn, direction='backward', n_features_to_select = QTY_REQUIRED_FEATURES)
@@ -80,8 +82,9 @@ def sequentialBackwardSelection():
   print(sfs.get_feature_names_out())
 
 def main():
-  #branchAndBound(tuple(FEATURE_NAMES))
-  sequentialBackwardSelection()
+  branchAndBound(tuple(FEATURE_NAMES))
+  # sequentialBackwardSelection()
+  # validateBranchAndBound(FEATURE_NAMES)
   print('Características selecionadas:', selectedFeatures)
   print('maxDistance:', maxDistance)
 
